@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Investigation Guide - BPSPA</title>
+    <style>
+        /* --- CORE THEME & ANIMATION --- */
+        :root {
+            --bg-dark: #0f172a;
+            --bg-light: #1e293b;
+            --accent-cyan: #06b6d4;
+            --accent-pink: #ec4899;
+            --accent-yellow: #eab308;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Animated Background */
+        .background {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 10% 20%, rgba(6, 182, 212, 0.15) 0%, transparent 40%),
+                        radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 40%);
+            animation: pulseBg 10s infinite alternate;
+        }
+
+        @keyframes pulseBg {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.1); opacity: 1; }
+        }
+
+        /* --- SLIDE LAYOUT --- */
+        .slider-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            /* Huge bottom padding for mobile scroll space */
+            padding: 4rem 1.5rem 10rem 1.5rem; 
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.95) translateY(20px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-y: auto; /* Scrollable */
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+            z-index: 10;
+        }
+
+        /* --- TYPOGRAPHY --- */
+        h1 {
+            font-size: clamp(2.2rem, 6vw, 4.5rem);
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+            font-weight: 800;
+        }
+
+        h2 {
+            font-size: clamp(1.6rem, 5vw, 2.5rem);
+            color: var(--accent-cyan);
+            border-bottom: 2px solid rgba(6, 182, 212, 0.3);
+            padding-bottom: 0.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            display: inline-block;
+        }
+
+        p, li {
+            font-size: clamp(1rem, 4vw, 1.2rem);
+            line-height: 1.6;
+            color: #e2e8f0;
+            margin-bottom: 0.8rem;
+        }
+
+        ul {
+            list-style: none;
+            width: 100%;
+        }
+
+        li {
+            padding: 0.8rem;
+            border-left: 3px solid rgba(255,255,255,0.1);
+            margin-bottom: 0.8rem;
+            background: rgba(255,255,255,0.03);
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* --- COMPONENTS --- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .card {
+            background: var(--bg-light);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .card h3 {
+            color: var(--accent-pink);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        .highlight {
+            color: var(--accent-yellow);
+            font-weight: bold;
+        }
+
+        /* Table - Horizontal Scroll on Mobile */
+        .table-container {
+            width: 100%;
+            max-width: 1100px;
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 1rem;
+            -webkit-overflow-scrolling: touch;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-light);
+            min-width: 700px; /* Forces scroll on small screens */
+        }
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 1rem;
+        }
+        th {
+            background: rgba(6, 182, 212, 0.15);
+            color: var(--accent-cyan);
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        tr:last-child td { border-bottom: none; }
+
+        /* Warning Box */
+        .warning {
+            border: 2px solid var(--accent-red);
+            background: rgba(239, 68, 68, 0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        /* Golden Rule */
+        .golden-rule {
+            border: 2px dashed var(--accent-yellow);
+            padding: 1.5rem;
+            text-align: center;
+            font-size: clamp(1.2rem, 5vw, 1.8rem);
+            color: var(--accent-yellow);
+            background: rgba(234, 179, 8, 0.05);
+            margin: 1.5rem 0;
+            border-radius: 12px;
+        }
+
+        /* --- MOBILE FRIENDLY CONTROLS --- */
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            right: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            z-index: 100;
+            /* Add backdrop filter for visibility over content */
+            background: rgba(15, 23, 42, 0.8);
+            padding: 0.5rem;
+            border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .btn {
+            background: var(--accent-cyan);
+            color: #000;
+            border: none;
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+            /* Prevent double-tap zoom on mobile */
+            touch-action: manipulation; 
+        }
+
+        .btn:active { transform: scale(0.95); }
+
+        .slide-counter {
+            position: fixed;
+            bottom: 3.2rem;
+            left: 2rem;
+            color: rgba(255,255,255,0.6);
+            font-family: monospace;
+            font-size: 1rem;
+            z-index: 100;
+            background: rgba(0,0,0,0.3);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0; left: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-pink));
+            width: 0%;
+            transition: width 0.3s;
+            z-index: 100;
+        }
+
+        /* --- MOBILE MEDIA QUERY --- */
+        @media (max-width: 768px) {
+            .slide {
+                padding-top: 3rem; /* Less top padding */
+                padding-bottom: 9rem; /* MORE bottom padding for controls */
+            }
+            .controls {
+                bottom: 1.5rem; /* Safe distance from bottom edge */
+                right: 1rem;
+            }
+            .slide-counter {
+                bottom: 1.5rem;
+                left: 1rem;
+            }
+            h1 { font-size: 2.2rem; }
+            h2 { font-size: 1.6rem; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="background"></div>
+    <div class="progress-bar" id="progressBar"></div>
+
+    <div class="slider-container">
+
+        <!-- SLIDE 1: Title -->
+        <div class="slide active">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">🛡️</div>
+            <h1>IT Act 2000 & BNS<br>Investigation Cheat Sheet</h1>
+            <p style="font-size: 1.2rem; color: var(--accent-cyan); margin-top: 1rem; text-align: center;">For Law Enforcement Officers</p>
+            <div style="margin-top: 3rem; padding: 1rem 1.5rem; border: 1px solid var(--text-muted); border-radius: 50px; background: rgba(0,0,0,0.3); text-align: center;">
+                Created by <strong>Dibakar Prasad Das</strong> for <strong>BPSPA</strong>
+            </div>
+        </div>
+
+        <!-- SLIDE 2: Who Can Investigate -->
+        <div class="slide">
+            <h2>1. Who Can Investigate? (Section 78)</h2>
+            <div class="card" style="width: 100%; max-width: 600px; text-align: center; padding: 2rem;">
+                <div style="font-size: 3.5rem;">👮‍♂️</div>
+                <h3 style="font-size: 1.8rem; justify-content: center; color: var(--text-main); margin: 1rem 0;">Rank: Inspector</h3>
+                <p><strong>Police Officer not below the rank of Inspector.</strong></p>
+                <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); font-size: 0.95rem;">
+                    Note: Sub-Inspectors can assist, but the Inspector must sign off on major investigative steps and the Charge Sheet.
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 3: Search & Arrest -->
+        <div class="slide">
+            <h2>2. Search & Arrest Power (Section 80)</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>🏢 Where?</h3>
+                    <p>Any "Public Place" (Hotels, Shops, Cyber Cafes, Public Transport).</p>
+                </div>
+                <div class="card">
+                    <h3>📜 Warrant?</h3>
+                    <p><strong>Not required</strong> for search/arrest in public places if you "Reasonably Suspect" an offence.</p>
+                </div>
+                <div class="card">
+                    <h3>🏠 Private Dwelling</h3>
+                    <p>Standard search warrant procedures (BNSS/CrPC) apply for private homes.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 4: Top Offences Table -->
+        <div class="slide">
+            <h2>3. Top Offence Sections</h2>
+            <p style="text-align: center; margin-bottom: 1rem; opacity: 0.7;">(Scroll table left/right on mobile)</p>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Offence</th>
+                            <th>IT Act</th>
+                            <th>Associated BNS Sections</th>
+                            <th>Punishment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Hacking / Data Theft</td>
+                            <td>66 (r/w 43)</td>
+                            <td>BNS 303(2) (Theft)<br>BNS 324 (Mischief)</td>
+                            <td>3 Years</td>
+                        </tr>
+                        <tr>
+                            <td>Stolen Password / PIN</td>
+                            <td>66C</td>
+                            <td>BNS 303(2) (Theft)<br>BNS 319 (Cheating)</td>
+                            <td>3 Years</td>
+                        </tr>
+                        <tr>
+                            <td>Phishing / Impersonation</td>
+                            <td>66D</td>
+                            <td>BNS 318(4) (Cheating)<br>BNS 336/338 (Forgery)</td>
+                            <td>3 Years</td>
+                        </tr>
+                        <tr>
+                            <td>Privacy Violation</td>
+                            <td>66E</td>
+                            <td>BNS 77 (Voyeurism)<br>BNS 292 (Obscenity)</td>
+                            <td>3 Years</td>
+                        </tr>
+                        <tr>
+                            <td>Obscene Content</td>
+                            <td>67</td>
+                            <td>BNS 292 (Obscenity)</td>
+                            <td>3-5 Years</td>
+                        </tr>
+                        <tr>
+                            <td>Sexually Explicit Act</td>
+                            <td>67A</td>
+                            <td>BNS 292/293 (Obscenity)</td>
+                            <td>5-7 Years</td>
+                        </tr>
+                        <tr>
+                            <td>Child Pornography</td>
+                            <td>67B</td>
+                            <td>POCSO Act (Mandatory)</td>
+                            <td>5-7 Years</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SLIDE 5: 66A Warning -->
+        <div class="slide">
+            <div class="warning">
+                <div style="font-size: 3rem;">⚠️</div>
+                <h3 style="font-size: 1.8rem; color: var(--accent-red); justify-content: center; flex-direction: column;">CAUTION:<br>SECTION 66A</h3>
+                <p style="font-size: 1.3rem; font-weight: bold; margin: 1rem 0;">IS UNCONSTITUTIONAL</p>
+                <p>Do <strong>NOT</strong> register FIRs under Section 66A.</p>
+                <hr style="border-color: rgba(239, 68, 68, 0.3); margin: 1.5rem 0;">
+                <p style="color: var(--accent-green); font-weight: bold; margin-bottom: 1rem;">USE BNS INSTEAD:</p>
+                <ul style="text-align: left; display: inline-block; width: auto;">
+                    <li style="border: none; background: transparent;">👉 <strong>BNS 352:</strong> Intentional insult with intent to provoke breach of peace.</li>
+                    <li style="border: none; background: transparent;">👉 <strong>BNS 351:</strong> Criminal Intimidation.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SLIDE 6: Essential BNS Sections -->
+        <div class="slide">
+            <h2>4. Essential BNS Sections for Cyber FIRs</h2>
+            <p style="margin-bottom: 2rem; text-align: center;">Consider adding these to strengthen your case:</p>
+            <div class="grid">
+                <div class="card">
+                    <h3>👥 Criminal Conspiracy (BNS 61)</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">(Old IPC 120B)</p>
+                    <p>Use when more than one person is involved (e.g., Call Center scams).</p>
+                </div>
+                <div class="card">
+                    <h3>🗑️ Destruction of Evidence (BNS 238)</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">(Old IPC 201)</p>
+                    <p>Use if accused deleted logs, formatted drive, or smashed phone.</p>
+                </div>
+                <div class="card">
+                    <h3>📝 Forgery (BNS 336)</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">(Old IPC 463/465)</p>
+                    <p>Creating fake documents, fake screenshots, or fake email headers.</p>
+                </div>
+                <div class="card">
+                    <h3>🤥 Forgery for Cheating (BNS 338)</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">(Old IPC 468)</p>
+                    <p>Using that fake document to cheat someone.</p>
+                </div>
+                <div class="card">
+                    <h3>🔪 Criminal Intimidation (BNS 351)</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">(Old IPC 506)</p>
+                    <p>Threatening someone via WhatsApp/Email.</p>
+                </div>
+                <div class="card">
+                    <h3>📢 Defamation (BNS 356)</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem;">(Old IPC 500)</p>
+                    <p>Posting false/harmful content to damage reputation.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 7: Digital Evidence (Part 1) -->
+        <div class="slide">
+            <h2>5. Digital Evidence "DO'S & DON'TS"</h2>
+            
+            <div class="golden-rule">
+                The Golden Rule<br>
+                "If it is ON, leave it ON.<br>If it is OFF, leave it OFF."
+            </div>
+
+            <div class="card" style="width: 100%; max-width: 800px;">
+                <h3>📱 On Seizure: Mobile Phones</h3>
+                <ul>
+                    <li><strong>Isolate:</strong> Airplane Mode + Wi-Fi OFF immediately.</li>
+                    <li><strong>Block Signals:</strong> Place in Faraday Bag. If unavailable, wrap in aluminum foil (min 3 layers).</li>
+                    <li><strong>Power:</strong> Do not rely on "Lock Screen"; keep device powered if unlocked.</li>
+                </ul>
+            </div>
+            
+            <div class="grid" style="margin-top: 1rem; width: 100%; max-width: 800px;">
+                <div class="card">
+                    <h3>💻 Computers/Laptops</h3>
+                    <p><strong>If OFF:</strong> Do not turn it on to "check."</p>
+                    <p><strong>If ON:</strong> Photograph screen. Pull power plug (desktops) to bypass shutdown sequences.</p>
+                    <p><strong>Volatile Data:</strong> If forensic expert present, capture RAM.</p>
+                </div>
+                <div class="card">
+                    <h3>📡 Routers & Modems</h3>
+                    <p>Often ignored, but crucial. They contain logs of connected devices. Seize them if relevant.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 8: Digital Evidence (Part 2) -->
+        <div class="slide">
+            <h2>5. Digital Evidence: Documentation</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>🔗 Chain of Custody</h3>
+                    <p>Maintain a strict log of everyone who handled the device.</p>
+                </div>
+                <div class="card">
+                    <h3>#️⃣ Hash Value</h3>
+                    <p>Ensure Forensic Lab generates a "Hash Value" (Digital Fingerprint) immediately.</p>
+                    <p class="highlight">Proves data hasn't been tampered with since seizure.</p>
+                </div>
+                <div class="card">
+                    <h3>🏷️ Labeling</h3>
+                    <p>Label ports and cables before unplugging so you can reconstruct the scene if needed.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 9: Financial Fraud -->
+        <div class="slide">
+            <h2>6. Financial Fraud: The "Golden Hour"</h2>
+            <div class="card" style="text-align: center; border: 2px solid var(--accent-green); padding: 2rem; width: 100%; max-width: 900px;">
+                <div style="font-size: 3.5rem;">⏳</div>
+                <h3 style="justify-content: center; font-size: 1.8rem; color: var(--accent-green);">Immediate Action</h3>
+                <p style="font-size: 1.1rem;">In online financial fraud (UPI/NetBanking), the first 2-3 hours are critical.</p>
+                
+                <div style="margin-top: 2rem; text-align: left;">
+                    <p><strong>👉 Section 91 CrPC / Section 94 BNSS:</strong> Issue notice immediately to the Bank/Wallet to "Freeze" the beneficiary account. Do not wait for formal FIR registration if a complaint is received; send a preservation request first.</p>
+                    <br>
+                    <p><strong>👉 Citizen Portal:</strong> Guide victims to call <strong>1930</strong> (National Cyber Crime Helpline) immediately to block funds.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 10: Intermediaries -->
+        <div class="slide">
+            <h2>7. Obtaining Data From Intermediaries</h2>
+            <p style="text-align: center; margin-bottom: 1rem;">(Facebook, Instagram, Google, WhatsApp, ISPs)</p>
+            
+            <div class="grid" style="margin-top: 2rem;">
+                <div class="card">
+                    <h3>📧 Preservation Request</h3>
+                    <p>Send an email to the Nodal Officer <strong>immediately</strong> to preserve data logs.</p>
+                </div>
+                <div class="card">
+                    <h3>🔍 What to Ask For</h3>
+                    <ul>
+                        <li><strong>IP Address:</strong> With Timestamp & Timezone (Crucial for location).</li>
+                        <li><strong>Reg Details:</strong> Mobile Number / Email.</li>
+                        <li><strong>Device ID:</strong> IMEI / MAC Address.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 11: Remember -->
+        <div class="slide">
+            <h2>8. REMEMBER</h2>
+            <div class="grid">
+                <div class="card">
+                    <h3>⚖️ Section 65B Certificate</h3>
+                    <p>Electronic evidence is <strong>inadmissible</strong> without a certificate under Section 65B of the Indian Evidence Act (or <strong>Section 63 of BSA</strong>).</p>
+                    <p class="highlight">Always demand this from the service provider.</p>
+                </div>
+                <div class="card">
+                    <h3>🌍 Jurisdiction</h3>
+                    <p>Cyber crime has no boundaries.</p>
+                    <p>You can register a <strong>"Zero FIR"</strong> irrespective of where the crime occurred.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 12: Conclusion -->
+        <div class="slide">
+            <h2>9. Conclusion: The Digital First Responder</h2>
+            <div style="font-size: 1.4rem; font-style: italic; margin-bottom: 2rem; text-align: center;">
+                "Crime has upgraded. Have we?"
+            </div>
+            
+            <p style="max-width: 800px; text-align: center; margin-bottom: 2rem;">As Law Enforcement Officers, you are the first line of defence. Success depends on <strong>Procedural Discipline</strong>.</p>
+            
+            <div class="grid" style="margin-bottom: 2rem;">
+                <div class="card" style="text-align: center;">
+                    <h3 style="justify-content: center; color: var(--accent-yellow);">⚡ Speed</h3>
+                    <p>Acting in the "Golden Hour" to freeze money.</p>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <h3 style="justify-content: center; color: var(--accent-red);">🎯 Precision</h3>
+                    <p>Seizing devices correctly so the "Hash Value" matches.</p>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <h3 style="justify-content: center; color: var(--accent-green);">⚖️ Law</h3>
+                    <p>Applying the correct mix of IT Act and BNS sections.</p>
+                </div>
+            </div>
+
+            <p style="max-width: 800px; text-align: center; color: var(--text-muted); font-size: 1rem;">
+                A criminal leaves a digital footprint that is harder to erase than a physical one—if you know where to look.<br>
+                <strong>Secure the scene, secure the device, document everything.</strong>
+            </p>
+
+            <div style="margin-top: 3rem; font-size: 0.9rem; opacity: 0.6; text-align: center;">
+                Created by <strong>Dibakar Prasad Das</strong> for <strong>BPSPA</strong>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- UI CONTROLS -->
+    <div class="slide-counter" id="slideCounter">1 / 12</div>
+    <div class="controls">
+        <button class="btn" onclick="moveSlide(-1)">❮</button>
+        <button class="btn" onclick="moveSlide(1)">❯</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progressBar');
+        const slideCounter = document.getElementById('slideCounter');
+        const totalSlides = slides.length;
+
+        function updateUI() {
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[currentSlide].classList.add('active');
+            
+            const progress = ((currentSlide + 1) / totalSlides) * 100;
+            progressBar.style.width = `${progress}%`;
+            slideCounter.textContent = `${currentSlide + 1} / ${totalSlides}`;
+        }
+
+        function moveSlide(direction) {
+            currentSlide += direction;
+            if (currentSlide < 0) currentSlide = 0;
+            if (currentSlide >= totalSlides) currentSlide = totalSlides - 1;
+            updateUI();
+            
+            // Auto scroll to top when changing slide
+            slides[currentSlide].scrollTop = 0;
+        }
+
+        // Keyboard Support
+        document.addEventListener('keydown', (e) => {
+            if(e.key === 'ArrowRight' || e.key === ' ') moveSlide(1);
+            if(e.key === 'ArrowLeft') moveSlide(-1);
+        });
+
+        // Touch Swipe Support
+        let startX = 0;
+        document.addEventListener('touchstart', e => startX = e.changedTouches[0].screenX);
+        document.addEventListener('touchend', e => {
+            if (e.changedTouches[0].screenX < startX - 50) moveSlide(1);
+            if (e.changedTouches[0].screenX > startX + 50) moveSlide(-1);
+        });
+
+        // Init
+        updateUI();
+    </script>
+</body>
+</html>
+
