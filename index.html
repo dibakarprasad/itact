@@ -179,6 +179,8 @@
             border: 1px solid rgba(255,255,255,0.1);
             margin-bottom: 1rem;
             -webkit-overflow-scrolling: touch;
+            /* Prevent swipe navigation when scrolling table */
+            touch-action: pan-x;
         }
         
         table {
@@ -313,6 +315,44 @@
             outline-offset: 2px;
         }
 
+        /* --- TABLET MEDIA QUERY --- */
+        @media (max-width: 1024px) and (min-width: 769px) {
+            .slide {
+                padding-top: 3rem;
+                padding-bottom: 9rem;
+            }
+            
+            .controls {
+                bottom: 1.5rem;
+                right: 1.5rem;
+            }
+            
+            .slide-counter {
+                bottom: 2rem;
+                left: 1.5rem;
+            }
+            
+            .btn {
+                width: 3.2rem;
+                height: 3.2rem;
+                font-size: 1.4rem;
+            }
+            
+            h1 { 
+                font-size: 3rem; 
+            }
+            
+            h2 { 
+                font-size: 2rem; 
+                width: 100%; 
+            }
+            
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.2rem;
+            }
+        }
+
         /* --- MOBILE MEDIA QUERY --- */
         @media (max-width: 768px) {
             .slide {
@@ -398,7 +438,7 @@
 
         <!-- SLIDE 3: Search & Arrest -->
         <section class="slide" aria-labelledby="slide3-title">
-            <h2 id="slide3-title">Search & Arrest Power <br>(Section 80)</h2>
+            <h2 id="slide3-title">Search, Seizure & Arrest Power <br>(Section 80) <br>(Ref: 35 BNSS, ex-41 CrPC)</h2>
             <div class="grid">
                 <div class="card">
                     <h3>🏢 Where?</h3>
@@ -419,7 +459,7 @@
         <section class="slide" aria-labelledby="slide4-title">
             <h2 id="slide4-title">Top Offence Sections</h2>
             <p style="text-align: center; margin-bottom: 1rem; opacity: 0.7;">(Scroll table left/right on mobile)</p>
-            <div class="table-container">
+            <div class="table-container" id="tableContainer">
                 <table>
                     <caption class="sr-only">Table of top offence sections with associated punishments</caption>
                     <thead>
@@ -602,8 +642,8 @@
 
         <!-- SLIDE 10: Intermediaries -->
         <section class="slide" aria-labelledby="slide10-title">
-            <h2 id="slide10-title">7. Obtaining Data From Intermediaries</h2>
-            <p style="text-align: center; margin-bottom: 1rem;">(Facebook, Instagram, Google, WhatsApp, ISPs)</p>
+            <h2 id="slide10-title">Obtaining Data From Intermediaries</h2>
+            <p style="text-align: center; margin-bottom: 1rem;">(Facebook, Instagram, Google, WhatsApp, ISPs)<br>(91 CrPC/94 BNSS)</p>
             
             <div class="grid" style="margin-top: 2rem;">
                 <div class="card">
@@ -687,7 +727,12 @@
         const slideCounter = document.getElementById('slideCounter');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
+        const tableContainer = document.getElementById('tableContainer');
         const totalSlides = slides.length;
+
+        // Track if user is interacting with table
+        let isScrollingTable = false;
+        let scrollTimeout;
 
         function updateUI() {
             slides.forEach(slide => slide.classList.remove('active'));
@@ -708,6 +753,9 @@
         }
 
         function moveSlide(direction) {
+            // Don't change slide if user is scrolling table
+            if (isScrollingTable) return;
+            
             currentSlide += direction;
             if (currentSlide < 0) currentSlide = 0;
             if (currentSlide >= totalSlides) currentSlide = totalSlides - 1;
@@ -715,6 +763,25 @@
             
             // Auto scroll to top when changing slide
             slides[currentSlide].scrollTop = 0;
+        }
+
+        // Detect table scrolling
+        if (tableContainer) {
+            tableContainer.addEventListener('touchstart', (e) => {
+                isScrollingTable = true;
+            });
+
+            tableContainer.addEventListener('touchend', (e) => {
+                // Reset scrolling flag after a short delay
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    isScrollingTable = false;
+                }, 100);
+            });
+
+            tableContainer.addEventListener('touchmove', (e) => {
+                isScrollingTable = true;
+            });
         }
 
         // Keyboard Support
@@ -725,12 +792,28 @@
             if(e.key === 'End') { currentSlide = totalSlides - 1; updateUI(); }
         });
 
-        // Touch Swipe Support
+        // Touch Swipe Support - Only trigger if not scrolling table
         let startX = 0;
-        document.addEventListener('touchstart', e => startX = e.changedTouches[0].screenX);
+        let startY = 0;
+        
+        document.addEventListener('touchstart', e => {
+            startX = e.changedTouches[0].screenX;
+            startY = e.changedTouches[0].screenY;
+        });
+
         document.addEventListener('touchend', e => {
-            if (e.changedTouches[0].screenX < startX - 50) moveSlide(1);
-            if (e.changedTouches[0].screenX > startX + 50) moveSlide(-1);
+            if (isScrollingTable) return;
+            
+            const endX = e.changedTouches[0].screenX;
+            const endY = e.changedTouches[0].screenY;
+            const diffX = endX - startX;
+            const diffY = endY - startY;
+            
+            // Only trigger slide change for horizontal swipes with minimal vertical movement
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50 && Math.abs(diffY) < 100) {
+                if (diffX < -50) moveSlide(1);  // Swipe left
+                if (diffX > 50) moveSlide(-1);  // Swipe right
+            }
         });
 
         // Screen reader only class for accessibility
@@ -742,4 +825,4 @@
         updateUI();
     </script>
 </body>
-</html>
+        </html>
