@@ -175,12 +175,14 @@
             width: 100%;
             max-width: 1100px;
             overflow-x: auto;
+            overflow-y: visible; /* Allow vertical overflow */
             border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.1);
             margin-bottom: 1rem;
             -webkit-overflow-scrolling: touch;
-            /* Prevent swipe navigation when scrolling table */
-            touch-action: pan-x;
+            /* Allow both horizontal and vertical touch actions */
+            touch-action: pan-x pan-y;
+            max-height: none; /* Remove any height restrictions */
         }
         
         table {
@@ -382,6 +384,12 @@
             .grid {
                 grid-template-columns: 1fr;
             }
+
+            /* Ensure table container doesn't restrict height on mobile */
+            .table-container {
+                max-height: none;
+                overflow-y: visible;
+            }
         }
 
         /* High contrast mode support */
@@ -438,7 +446,7 @@
 
         <!-- SLIDE 3: Search & Arrest -->
         <section class="slide" aria-labelledby="slide3-title">
-            <h2 id="slide3-title">Search, Seizure & Arrest Power <br>(Section 80) <br>(Ref: 35 BNSS, ex-41 CrPC)</h2>
+            <h2 id="slide3-title">Search, Seizure & Arrest Power <br>(Section 80)<br>(Ref: 35 BNSS, ex-41CrPC)</h2>
             <div class="grid">
                 <div class="card">
                     <h3>🏢 Where?</h3>
@@ -458,7 +466,7 @@
         <!-- SLIDE 4: Top Offences Table -->
         <section class="slide" aria-labelledby="slide4-title">
             <h2 id="slide4-title">Top Offence Sections</h2>
-            <p style="text-align: center; margin-bottom: 1rem; opacity: 0.7;">(Scroll table left/right on mobile)</p>
+            <p style="text-align: center; margin-bottom: 1rem; opacity: 0.7;">(Scroll table left/right/up/down on mobile)</p>
             <div class="table-container" id="tableContainer">
                 <table>
                     <caption class="sr-only">Table of top offence sections with associated punishments</caption>
@@ -643,7 +651,7 @@
         <!-- SLIDE 10: Intermediaries -->
         <section class="slide" aria-labelledby="slide10-title">
             <h2 id="slide10-title">Obtaining Data From Intermediaries</h2>
-            <p style="text-align: center; margin-bottom: 1rem;">(Facebook, Instagram, Google, WhatsApp, ISPs)<br>(91 CrPC/94 BNSS)</p>
+            <p style="text-align: center; margin-bottom: 1rem;">(Facebook, Instagram, Google, WhatsApp, ISPs)<BR>(91 CrPC/94 BNSS</p>
             
             <div class="grid" style="margin-top: 2rem;">
                 <div class="card">
@@ -782,6 +790,24 @@
             tableContainer.addEventListener('touchmove', (e) => {
                 isScrollingTable = true;
             });
+
+            // Also detect mouse events for desktop testing
+            tableContainer.addEventListener('mousedown', (e) => {
+                isScrollingTable = true;
+            });
+
+            tableContainer.addEventListener('mouseup', (e) => {
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    isScrollingTable = false;
+                }, 100);
+            });
+
+            tableContainer.addEventListener('mousemove', (e) => {
+                if (e.buttons === 1) { // Left mouse button is pressed
+                    isScrollingTable = true;
+                }
+            });
         }
 
         // Keyboard Support
@@ -825,4 +851,4 @@
         updateUI();
     </script>
 </body>
-        </html>
+</html>
